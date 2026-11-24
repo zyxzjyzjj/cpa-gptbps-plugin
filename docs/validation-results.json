@@ -433,7 +433,24 @@
         "internal/auth/device_test.go": "Windows ACL-aware permission assertion"
       },
       "existing_dependency_versions": "identical; plugin adds yaml.v3",
-      "source_workspace_modified_by_this_fix": false
+      "source_workspace_modified_by_this_fix": false,
+      "runtime_go_files": 44,
+      "test_go_files": 43,
+      "counts_include_tests": true,
+      "full_standalone_cli_mirror": false,
+      "entrypoint_differences": [
+        "Standalone CLI/protocol diagnostic/experimental ARC/tools-version controls are not all exposed as plugin configuration",
+        "Plugin queue and wait_seconds are shared by admission and start pacing; original CLI has independent optional controls",
+        "CPA adapter request JSON limit is 64 MiB; original standalone HTTP limit is 256 MiB",
+        "Nonstream C ABI cancellation retains its documented independent-notification limitation"
+      ],
+      "default_limits_match": {
+        "concurrency": 4,
+        "queue": 64,
+        "wait_seconds": 30,
+        "ws_idle_seconds": 120,
+        "upstream_rps": 0
+      }
     },
     "server_baseline": {
       "plugin_version": "0.1.2",
@@ -463,7 +480,7 @@
       "Defer publishing lifecycle events until actual output, validated client tools or a valid terminal response",
       "Classify overload as HTTP 503; preserve bounded retry metadata and existing rate/auth/model/quota categories",
       "Retain partial-output failure events and never synthesize successful completion or replay generation",
-      "Wait for original WebSocket terminal cleanup and slot release; abort cancellations immediately",
+      "Wait for original WebSocket terminal cleanup and slot release; retain streaming cancellation/transport abort, with documented nonstream ABI limits",
       "Return failed startup before joining blocked liveness callbacks so native bounded queues can abort; hold run lease until callbacks drain"
     ],
     "focused_race_tests": {
@@ -482,8 +499,93 @@
       ],
       "startup_backpressure": "native bounded stream queue contract covered with a one-entry fixture"
     },
-    "server_upgrade_verification": "pending",
-    "ci": "pending",
-    "production_usage_queue_consumed": false
+    "server_upgrade_verification": {
+      "result": "passed",
+      "release": "v0.1.3",
+      "initial_installation": "Verified successful Linux CI artifact, deployed while macOS arm64 was waiting for capacity",
+      "ci_artifact_id": 14922241341,
+      "ci_artifact_digest": "sha256:3e8bcf096b05566eee59322bd1fe8f13c81425e88efeef9713c3510ef476eca4",
+      "official_package_sha256": "28bda03b2331ab9e536f31cc8475d97a23cb76702ccc32bb8c2e29baa5a3165e",
+      "installed_library_sha256": "18a945033118bf828d566b77abd60217525d7dc26610d27ea4456190221119b7",
+      "installed_library_matches_official_release": true,
+      "anonymous_checksums_http_status": 200,
+      "anonymous_linux_package_http_status": 200,
+      "checksum_manifest_entries": 5,
+      "registered": true,
+      "effective_enabled": true,
+      "store_installed_version": "0.1.3",
+      "store_update_available": false,
+      "authorization_files_preserved": 15,
+      "enabled_bps_accounts": 1,
+      "enabled_native_accounts": 0,
+      "task_key_preserved": true,
+      "other_config_preserved": true,
+      "services": {
+        "cliproxyapi": "active",
+        "cpa-public": "active"
+      }
+    },
+    "ci": {
+      "run_id": 45397368542,
+      "source_commit": "884e8c68681b8b4e73d3cfa806782341206e0355",
+      "run_attempt": 2,
+      "result": "success",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64",
+        "windows/amd64",
+        "darwin/amd64",
+        "darwin/arm64"
+      ],
+      "publish": "success",
+      "infrastructure_retry": {
+        "first_attempt": "Four builds passed; macOS arm64 job never acquired a hosted runner and was cancelled after 15 minutes",
+        "failed_job_id": 138456599071,
+        "api_rerun_requested_for": "cancelled macOS arm64 job and its dependencies",
+        "actual_second_attempt": "GitHub reran the build matrix; all five builds/tests and publish passed"
+      }
+    },
+    "production_usage_queue_consumed": false,
+    "server_retest": {
+      "same_baseline_workload": true,
+      "consecutive_nonstream_requests": 3,
+      "consecutive_stream_requests": 3,
+      "pause_seconds": 45,
+      "post_pause_requests": 2,
+      "total_requests": 8,
+      "completed_with_text": 7,
+      "explicit_http_failure_responses": 1,
+      "http_failure_details": {
+        "case": "burst_nonstream_1",
+        "http_status": 502,
+        "error_message": "BPS returned a failed response",
+        "retry_after": null
+      },
+      "http_200_without_text": 0,
+      "http_200_error_only_streams": 0,
+      "late_stream_failures": 0,
+      "cached_tokens_for_each_completed_request": 22144,
+      "early_client_cancellation": {
+        "before_response_headers": true,
+        "auth_failure_counter_before": 1,
+        "auth_failure_counter_after": 1,
+        "does_not_prove_usage_queue_record": true
+      },
+      "recovery_after_cancel": {
+        "http_status": 200,
+        "response_status": "completed",
+        "text": "RECOVERY_DIAG_OK",
+        "cached_tokens": 22144
+      },
+      "live_post_upgrade_503_with_7s_hint_observed": false,
+      "overload_status_retry_mapping_validation": "Captured real v0.1.2 error shape replayed in focused regression tests, with native CPA RetryAfter/SafeResponseHeaders contract inspected",
+      "all_generation_requests_succeeded": false
+    },
+    "limitations": [
+      "Upstream overload and transport failures can still occur; one post-upgrade request returned explicit HTTP 502.",
+      "If stream content has already been delivered, clients must handle terminal errors; HTTP status cannot change retroactively.",
+      "Production usage queue was not read, so early-cancellation usage persistence was not independently verified.",
+      "Current live server verification is Linux; native platform CI tests are separate from real CPA host-generation acceptance on every OS."
+    ]
   }
 }

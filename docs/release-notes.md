@@ -8,7 +8,9 @@ The server reproduction sent six consecutive requests and two more after a 45-se
 - Wait for the copied bridge's normal WebSocket cleanup and task slot release instead of cancelling a terminal connection early.
 - Handle CPA's bounded pre-opened stream queue without deadlocking a slow failed startup; cancellation and plugin shutdown continue to drain owned work.
 
-Compared directly with the current `bps-local-public` working tree: all 87 core Go files are present, 85 match after module-path normalization, and the only two differences are the documented request-credential adapter and Windows ACL test correction. Core protocol, task scheduling, tools and accounting remain unchanged.
+Compared directly with the current `bps-local-public` working tree: all 87 core Go files (44 runtime files and 43 tests) are present, 85 match after module-path normalization, and the only two differences are the documented request-credential adapter and Windows ACL test correction. Core protocol, task scheduling, tools and accounting remain unchanged.
+
+This is a CPA adapter, not a complete mirror of every standalone CLI feature: diagnostic/experimental CLI switches are not all exposed, queue and pacing settings share the plugin controls, the adapter has a 64 MiB request limit, and nonstream cancellation retains the existing ABI limitation.
 
 Store source:
 
@@ -19,5 +21,7 @@ https://raw.githubusercontent.com/zyxzjyzjj/cpa-gptbps-plugin/main/registry.json
 Upgrade the plugin and restart CPA. Authenticated upstream model discovery from v0.1.2 remains in place, with the same default 300-second account-reload cache behavior.
 
 Focused race checks passed, including startup failure, retry metadata, function/custom tool-only output, partial output followed by failure, cancellation, delayed close acknowledgement and bounded host queue backpressure. Release CI and live upgraded-server results are recorded in [WORKLOG.md](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/blob/main/docs/WORKLOG.md).
+
+All five native platform builds/tests and publication passed on the second CI attempt after GitHub capacity prevented the first macOS arm64 job from starting. The Linux server runs v0.1.3 and its installed library matches the published package. Repeating the same eight-request workload produced seven completed text responses and one explicit HTTP 502 JSON error, with no HTTP 200 responses lacking text. Early client cancellation was followed by a successful recovery request. Existing authorizations, account enablement and the task key were preserved.
 
 BPS may still reject or overload requests. If content has already reached the client, HTTP status cannot be changed; clients must handle a terminal stream error. Appearing in the model catalog does not prove generation entitlement or available quota.

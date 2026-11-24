@@ -73,7 +73,7 @@ v0.1.1 不再设置固定默认模型列表，旧的 `models` 配置也不再限
 
 连续请求时，上游可能在 `response.created` / `response.in_progress` 后直接返回 `server_is_overloaded`，尚未输出正文。v0.1.3 在首个正文、推理文本、工具事件或有效终态前暂存初始化事件，使这类过载能够返回 HTTP 503，并保留上游 `Retry-After`；限流、权限及模型错误同样保留对应状态。已有内容之后发生的错误仍作为流内失败传递，并记录为失败，不改写成完成，也不由插件重发生成。
 
-连接结束会等待原桥接完成 WebSocket 正常关闭及任务槽位释放，取消和断流仍立即中止。核心协议、任务池、工具转换及 usage 数据沿用当前 `bps-local-public`；启动缓冲及错误状态转换属于 CPA 适配层。
+连接结束会等待原桥接完成 WebSocket 正常关闭及任务槽位释放；流式取消和异常断流继续传播中止，非流式取消边界见下表。核心协议、任务池、工具转换及 usage 数据沿用当前 `bps-local-public`；启动缓冲及错误状态转换属于 CPA 适配层。
 
 ```bash
 curl http://127.0.0.1:8317/v1/responses \
@@ -114,6 +114,8 @@ CPA 可选的请求日志记录客户端请求/返回内容，可能包含敏感
 | 代理 | 凭据 proxy_url → 宿主全局代理 → 插件后备代理；链式/认证代理可先转为本地 relay |
 | quota 面板 | 无独立 quota provider；不伪装为原生 Codex quota 卡片 |
 | compact / count_tokens | 明确 501，不返回假 token 数 |
+
+这里复用的是完整协议核心，并非原项目整个 CLI 的逐文件镜像。独立 CLI 的协议诊断入口、实验性 ARC 开关和 `bps-tools-version` 没有暴露为插件配置；原 CLI 可分别调整的排队与启动限速等待/队列，在插件中共用 `wait_seconds` / `queue`。默认值与原 CLI 相同。CPA 适配入口限制请求 JSON 为 64 MiB，原独立 HTTP 入口为 256 MiB；核心自身的 SSE/WS 事件限制没有改动。
 
 ## 构建与验证
 
