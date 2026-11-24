@@ -22,8 +22,9 @@ plugins:
       state_dir: ""
       # Optional fallback; credential proxy_url and host global proxy precede it.
       proxy_url: ""
-      models:
-        - gpt-5.6-sol
+      # Model IDs always come from this credential's upstream BPS model catalog.
+      # Revalidated when CPA reloads account models after this cache expires.
+      model_cache_seconds: 300
       concurrency: 4
       queue: 64
       wait_seconds: 30

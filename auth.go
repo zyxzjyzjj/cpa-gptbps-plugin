@@ -250,16 +250,20 @@ type hostOAuthTransport struct {
 }
 
 func (t hostOAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	body, err := io.ReadAll(io.LimitReader(req.Body, 2<<20))
-	if err != nil {
-		return nil, err
+	var body []byte
+	if req.Body != nil {
+		var err error
+		body, err = io.ReadAll(io.LimitReader(req.Body, 2<<20))
+		if err != nil {
+			return nil, err
+		}
 	}
 	var result struct {
 		StatusCode int         `json:"status_code"`
 		Headers    http.Header `json:"headers"`
 		Body       []byte      `json:"body"`
 	}
-	err = t.call("host.http.do", map[string]any{"host_callback_id": t.callbackID, "method": req.Method, "url": req.URL.String(), "headers": req.Header, "body": body}, &result)
+	err := t.call("host.http.do", map[string]any{"host_callback_id": t.callbackID, "method": req.Method, "url": req.URL.String(), "headers": req.Header, "body": body}, &result)
 	if err != nil {
 		return nil, errors.New("OAuth host transport failed")
 	}

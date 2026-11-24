@@ -17,41 +17,45 @@ import (
 )
 
 type config struct {
-	StateDir      string   `yaml:"state_dir"`
-	ProxyURL      string   `yaml:"proxy_url"`
-	Models        []string `yaml:"models"`
-	Concurrency   int      `yaml:"concurrency"`
-	Queue         int      `yaml:"queue"`
-	WaitSeconds   int      `yaml:"wait_seconds"`
-	UpstreamRPS   int      `yaml:"upstream_rps"`
-	WSIdleSeconds int      `yaml:"ws_idle_seconds"`
-	LoginMethod   string   `yaml:"login_method"`
+	StateDir          string `yaml:"state_dir"`
+	ProxyURL          string `yaml:"proxy_url"`
+	ModelCacheSeconds int    `yaml:"model_cache_seconds"`
+	Concurrency       int    `yaml:"concurrency"`
+	Queue             int    `yaml:"queue"`
+	WaitSeconds       int    `yaml:"wait_seconds"`
+	UpstreamRPS       int    `yaml:"upstream_rps"`
+	WSIdleSeconds     int    `yaml:"ws_idle_seconds"`
+	LoginMethod       string `yaml:"login_method"`
 	// Upstream is intentionally not user-configurable. Tests can inject fixtures.
 	upstream string
 }
 
 func defaultConfig() config {
-	return config{Models: []string{"gpt-5.6-sol"}, Concurrency: 4, Queue: 64, WaitSeconds: 30, WSIdleSeconds: 120, LoginMethod: "browser"}
+	return config{ModelCacheSeconds: 300, Concurrency: 4, Queue: 64, WaitSeconds: 30, WSIdleSeconds: 120, LoginMethod: "browser"}
 }
 
 type plugin struct {
-	mu         sync.Mutex
-	cfg        config
-	host       hostCall
-	hostConfig hostConfig
-	state      *gateway.StandaloneState
-	handler    *gateway.StandaloneHandler
-	ctx        context.Context
-	cancel     context.CancelFunc
-	logins     map[string]*loginSession
-	closed     bool
-	refreshMu  sync.Mutex
-	runs       sync.WaitGroup
+	mu             sync.Mutex
+	cfg            config
+	host           hostCall
+	hostConfig     hostConfig
+	state          *gateway.StandaloneState
+	handler        *gateway.StandaloneHandler
+	ctx            context.Context
+	cancel         context.CancelFunc
+	logins         map[string]*loginSession
+	closed         bool
+	refreshMu      sync.Mutex
+	runs           sync.WaitGroup
+	catalogMu      sync.Mutex
+	catalogs       map[string]catalogEntry
+	catalogFlights map[string]chan struct{}
 }
 
 func newPlugin(call hostCall) *plugin {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &plugin{cfg: defaultConfig(), host: call, ctx: ctx, cancel: cancel, logins: map[string]*loginSession{}}
+	return &plugin{cfg: defaultConfig(), host: call, ctx: ctx, cancel: cancel, logins: map[string]*loginSession{},
+		catalogs: map[string]catalogEntry{}, catalogFlights: map[string]chan struct{}{}}
 }
 func (p *plugin) configure(raw []byte) error {
 	var req lifecycleRequest
@@ -76,15 +80,8 @@ func (p *plugin) configure(raw []byte) error {
 	if cfg.LoginMethod != "browser" && cfg.LoginMethod != "device" {
 		return badRequest("login_method must be browser or device")
 	}
-	if len(cfg.Models) == 0 {
-		return badRequest("models must contain at least one BPS model ID")
-	}
-	seen := map[string]bool{}
-	for _, name := range cfg.Models {
-		if strings.TrimSpace(name) != name || name == "" || strings.ContainsAny(name, "\r\n") || seen[name] {
-			return badRequest("models must contain unique nonempty IDs")
-		}
-		seen[name] = true
+	if cfg.ModelCacheSeconds < 1 || cfg.ModelCacheSeconds > 3600 {
+		return badRequest("model_cache_seconds must be between 1 and 3600")
 	}
 	if err := validateProxy(cfg.ProxyURL); err != nil {
 		return err
@@ -218,7 +215,7 @@ func registration() any {
 	fields := []map[string]any{
 		{"Name": "state_dir", "Type": "string", "Description": "Persistent private task state; separate directory per CPA process. Restart required after first request."},
 		{"Name": "proxy_url", "Type": "string", "Description": "Fallback outbound proxy. Auth proxy_url then host proxy take precedence. Credentials are never returned by the panel."},
-		{"Name": "models", "Type": "array", "Default": []string{"gpt-5.6-sol"}, "Description": "BPS model IDs allowed by your account; static configuration does not prove entitlement."},
+		{"Name": "model_cache_seconds", "Type": "integer", "Default": 300, "Description": "Cache upstream BPS model catalogs per credential. CPA account-model reloads revalidate expired entries. Legacy models lists are ignored."},
 		{"Name": "concurrency", "Type": "integer", "Default": 4, "Description": "Original BPS per-account concurrency."},
 		{"Name": "queue", "Type": "integer", "Default": 64, "Description": "Original BPS waiting queue capacity."},
 		{"Name": "wait_seconds", "Type": "integer", "Default": 30, "Description": "Queue and upstream start budget."},
@@ -235,26 +232,6 @@ func registration() any {
 			"executor_model_scope": "oauth", "executor_input_formats": []string{"openai-response", "codex"}, "executor_output_formats": []string{"codex"},
 			"response_after_translator": true, "management_api": true},
 	}
-}
-func (p *plugin) models(raw []byte) (any, error) {
-	var req authMaterial
-	if err := decode(raw, &req); err != nil {
-		return nil, err
-	}
-	if req.AuthProvider != "" && req.AuthProvider != provider {
-		return map[string]any{"Provider": provider, "Models": []modelInfo{}}, nil
-	}
-	if _, err := readCredential(materialJSON(req.StorageJSON, req.Metadata)); err != nil {
-		return nil, err
-	}
-	models := []modelInfo{}
-	for _, id := range p.getConfig().Models {
-		models = append(models, modelInfo{ID: id, Object: "model", OwnedBy: provider, Type: provider, DisplayName: id + " (BPS)",
-			SupportedParameters:      []string{"tools", "tool_choice", "reasoning_effort", "response_format"},
-			SupportedInputModalities: []string{"text", "image"}, SupportedOutputModalities: []string{"text"},
-			Thinking: &thinkingSupport{Levels: []string{"low", "medium", "high", "xhigh"}}})
-	}
-	return map[string]any{"Provider": provider, "Models": models}, nil
 }
 func materialJSON(raw []byte, metadata map[string]any) []byte {
 	if len(raw) > 0 {

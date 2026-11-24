@@ -59,7 +59,9 @@ func (p *plugin) manage(raw []byte) (any, error) {
 		}
 		ready := p.handler != nil
 		p.mu.Unlock()
-		result = map[string]any{"provider": provider, "version": version, "gateway_initialized": ready, "pending_logins": active, "models": cfg.Models,
+		models, catalogs := p.catalogStatus()
+		result = map[string]any{"provider": provider, "version": version, "gateway_initialized": ready, "pending_logins": active, "models": models,
+			"model_catalog_source": bpsCatalogURL, "model_catalogs": catalogs, "model_cache_seconds": cfg.ModelCacheSeconds,
 			"concurrency": cfg.Concurrency, "queue": cfg.Queue, "login_method": cfg.LoginMethod,
 			"client_tools": true, "hosted_tools": false, "previous_response_id": false, "image_input": "https URL only",
 			"usage": "CPA native reporter; cache reads come from upstream usage", "refresh": "BPS client only; rotating grants are never automatically retried"}

@@ -22,7 +22,7 @@ https://raw.githubusercontent.com/zyxzjyzjj/cpa-gptbps-plugin/main/registry.json
 
 然后安装 **Codex BPS**，开启全局插件开关。宿主必须是支持 CGO 插件的版本；管理接口的 `X-CPA-SUPPORT-PLUGIN: 1` 仅代表构建支持，还应确认 `/v0/management/plugins` 中该插件为 `registered: true`、`effective_enabled: true`。
 
-仓库和商店源已公开；[v0.1.0 发布包](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/releases/tag/v0.1.0) 提供 Windows amd64、Linux amd64/arm64、macOS amd64/arm64 及 `checksums.txt`。已在全新 Windows CPA 实例通过匿名商店安装、凭据导入及真实生成验收。
+仓库和商店源已公开；[发布包](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/releases/latest) 提供 Windows amd64、Linux amd64/arm64、macOS amd64/arm64 及 `checksums.txt`。原 v0.1.0 已在全新 Windows CPA 实例通过匿名商店安装、凭据导入及真实生成验收；后续版本结果见验收记录。
 
 配置示例见 [config.example.yaml](config.example.yaml)。插件 ID、配置键和 ZIP 内的库名均为 `codex-bps`；宿主在 Windows 商店安装时可能使用带版本的 DLL 文件名。发布包采用 CPA 要求的命名格式，库位于 ZIP 根目录。
 
@@ -58,7 +58,18 @@ Linux/macOS 对应命令是 `./bps-login`，需要桌面 Chromium/Chrome/Edge。
 
 ## 调用
 
-模型必须是账号实际有权使用的 BPS 模型。默认配置暴露 `gpt-5.6-sol`，模型列表是配置声明，不能证明其他账号具有权限。若与其他 provider 重名，可在凭据上设置 CPA `prefix`，明确选中 BPS。
+模型目录按每份 BPS 凭据从上游读取：
+
+```text
+GET https://bps.openai.com/basispoints/api/responses/access?include_models=true
+→ model_catalog.models
+```
+
+v0.1.1 不再设置固定默认模型列表，旧的 `models` 配置也不再限制或补充目录。模型 ID、名称、描述和可用思考档位取自上游；思考档位只公布现有桥接核心实际实现的部分，并排除上游 `restricted_models`。账号加载、导入或 CPA 重新注册该账号的模型时查询目录；成功结果按凭据隔离缓存，默认 300 秒。缓存到期后，下次宿主模型加载会重新查询；这不代表独立后台定时刷新 `/v1/models`。
+
+认证/权限失败会清空对应缓存。短暂网络、429 或上游 5xx 失败仅可复用距最后成功读取不足 15 分钟的上游目录，并在插件 status 中标记 `stale` 和错误码；没有有效目录时明确报错，不补上固定模型。空目录保持为空。模型出现在上游目录中也不等于真实生成一定成功，仍受账号额度和服务状态影响。
+
+升级 v0.1.1 后重启 CPA，即会按当前账号拉取目录，无需手填模型。若与其他 provider 重名，可在凭据上设置 CPA `prefix`，明确选中 BPS。
 
 ```bash
 curl http://127.0.0.1:8317/v1/responses \
@@ -107,7 +118,7 @@ CPA 可选的请求日志记录客户端请求/返回内容，可能包含敏感
 ```bash
 go test ./...
 CGO_ENABLED=1 go build -trimpath -buildmode=c-shared -o codex-bps.so .
-python tools/package.py --version 0.1.0
+python tools/package.py --version 0.1.1
 ```
 
 Windows 输出 `.dll`，macOS 输出 `.dylib`。发布工作流在各平台原生编译、测试并生成安装包。真实上游验收、请求用量与已知限制记录在 [docs/WORKLOG.md](docs/WORKLOG.md)；单元测试不替代真实账号权限验证。

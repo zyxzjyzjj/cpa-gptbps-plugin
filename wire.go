@@ -154,6 +154,7 @@ type modelInfo struct {
 	OwnedBy                   string
 	Type                      string
 	DisplayName               string
+	Description               string
 	SupportedParameters       []string
 	SupportedInputModalities  []string
 	SupportedOutputModalities []string
