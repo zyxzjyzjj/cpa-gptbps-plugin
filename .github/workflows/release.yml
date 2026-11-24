@@ -1,0 +1,72 @@
+name: Native plugin release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build without publishing
+        required: true
+        default: "0.1.0"
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux-arm64
+          - runner: windows-2025
+            platform: windows-amd64
+          - runner: macos-15-intel
+            platform: darwin-amd64
+          - runner: macos-15
+            platform: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Verify protocol core and plugin adapter
+        run: go test ./...
+        env:
+          CGO_ENABLED: "1"
+      - name: Package native library and login companion
+        shell: bash
+        run: python tools/package.py --version "${{ inputs.version || github.ref_name }}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Assemble and verify CPA checksums
+        shell: bash
+        run: |
+          cd release-assets
+          cat *.sha256 | sort -k 2 > checksums.txt
+          sha256sum --check checksums.txt
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" release-assets/*.zip release-assets/checksums.txt \
+            --title "Codex BPS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

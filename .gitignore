@@ -1,0 +1,13 @@
+/dist/
+/runtime/
+/private/
+/config.yaml
+*.dll
+*.so
+*.dylib
+*.exe
+*.h
+*.zip
+*.log
+*.test
+!**/testdata/**

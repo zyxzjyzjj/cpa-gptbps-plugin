@@ -1,0 +1,277 @@
+{
+  "date": "2026-11-24",
+  "timezone": "Asia/Shanghai",
+  "environment": "Windows amd64; real CPA v8 8522538; real BPS gpt-5.6-sol",
+  "cases": [
+    {
+      "case": "text_nonstream",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 4.651,
+      "usage": {
+        "input_tokens": 22358,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 0
+          },
+          "cached_tokens": 22355
+        },
+        "output_tokens": 5,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22363
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "text_cached_stream",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 3.237,
+      "usage": {
+        "input_tokens": 22358,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 0
+          },
+          "cached_tokens": 22355
+        },
+        "output_tokens": 5,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22363
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "function_call",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 5.512,
+      "usage": {
+        "input_tokens": 22837,
+        "input_tokens_details": {
+          "cache_write_tokens": 22834,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 22834
+          },
+          "cached_tokens": 0
+        },
+        "output_tokens": 88,
+        "output_tokens_details": {
+          "reasoning_tokens": 15
+        },
+        "total_tokens": 22925
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "function_result",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 5.139,
+      "usage": {
+        "input_tokens": 22942,
+        "input_tokens_details": {
+          "cache_write_tokens": 105,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 105
+          },
+          "cached_tokens": 22834
+        },
+        "output_tokens": 5,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22947
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "function_roundtrip",
+      "pass": true
+    },
+    {
+      "case": "custom_call",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 4.88,
+      "usage": {
+        "input_tokens": 22811,
+        "input_tokens_details": {
+          "cache_write_tokens": 22808,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 22808
+          },
+          "cached_tokens": 0
+        },
+        "output_tokens": 59,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22870
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "custom_result",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 3.572,
+      "usage": {
+        "input_tokens": 22898,
+        "input_tokens_details": {
+          "cache_write_tokens": 87,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 87
+          },
+          "cached_tokens": 22808
+        },
+        "output_tokens": 8,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22906
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "custom_roundtrip",
+      "pass": true
+    },
+    {
+      "case": "structured_json",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 3.872,
+      "usage": {
+        "input_tokens": 22482,
+        "input_tokens_details": {
+          "cache_write_tokens": 22479,
+          "cache_write_tokens_details": {
+            "ttl_12h_tokens": 0,
+            "ttl_30m_tokens": 22479
+          },
+          "cached_tokens": 0
+        },
+        "output_tokens": 9,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22491
+      },
+      "status": "completed",
+      "pass": true
+    },
+    {
+      "case": "structured_schema",
+      "pass": true
+    },
+    {
+      "case": "chat_nonstream",
+      "http_status": 200,
+      "expected_status": 200,
+      "seconds": 3.909,
+      "usage": {
+        "completion_tokens": 6,
+        "total_tokens": 22365,
+        "prompt_tokens": 22359,
+        "prompt_tokens_details": {
+          "cached_tokens": 22347,
+          "cache_write_tokens": 9,
+          "cached_creation_tokens": 9
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "status": null,
+      "pass": true
+    },
+    {
+      "case": "reject_previous_response",
+      "http_status": 400,
+      "expected_status": 400,
+      "seconds": 0.026,
+      "usage": null,
+      "status": null,
+      "pass": true
+    },
+    {
+      "case": "reject_inline_image",
+      "http_status": 400,
+      "expected_status": 400,
+      "seconds": 0.03,
+      "usage": null,
+      "status": null,
+      "pass": true
+    },
+    {
+      "case": "reject_forced_tool_choice",
+      "http_status": 400,
+      "expected_status": 400,
+      "seconds": 0.005,
+      "usage": null,
+      "status": null,
+      "pass": true
+    },
+    {
+      "case": "reject_compact",
+      "http_status": 501,
+      "expected_status": 501,
+      "seconds": 0.025,
+      "usage": null,
+      "status": null,
+      "pass": true
+    }
+  ],
+  "cpamp": {
+    "commit": "dcfa8bc",
+    "path": "usage.NormalizeRaw -> store.InsertEvents -> SQLite",
+    "records": 16,
+    "success": 8,
+    "failure": 8,
+    "cached_tokens": 112699,
+    "duplicate_replay_new_rows": 0,
+    "passed": true
+  },
+  "additional": {
+    "https_image": {
+      "http_status": 200,
+      "input_tokens": 22621,
+      "output_tokens": 12,
+      "cached_tokens": 22347
+    },
+    "count_tokens": {
+      "http_status": 501
+    },
+    "stream_cancellation": {
+      "observed_first_text_delta": true,
+      "native_failed_record": true,
+      "subsequent_generation_http_status": 200
+    }
+  },
+  "limitations": [
+    "Real OAuth login reused earlier independent BPS authorization; native callback, PKCE and refresh rotation tested with fixtures; valid RT not forcibly exchanged.",
+    "Nonstream C ABI has no independent downstream cancellation notification.",
+    "BPS hosted tools, inline images, previous_response_id and forced tool_choice are unsupported.",
+    "Linux/macOS real CPA-host loading has not been tested.",
+    "Store installation is pending release publication."
+  ]
+}

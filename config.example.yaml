@@ -1,0 +1,32 @@
+# CPA v8. Keep your existing listener, management key and API keys.
+config-version: 8
+observability:
+  usage:
+    usage-statistics-enabled: true
+    # CPA-Manager-Plus must consume the queue before retention expires.
+    redis-usage-queue-retention-seconds: 3600
+  logs:
+    # Optional: request/response logs can contain prompts and generated content.
+    request-log: false
+plugins:
+  enabled: true
+  dir: plugins
+  store-sources:
+    - https://raw.githubusercontent.com/zyxzjyzjj/cpa-gptbps-plugin/main/registry.json
+  configs:
+    codex-bps:
+      enabled: true
+      priority: 1
+      # Set an absolute private directory. Preserve task.key across upgrades.
+      # A different CPA process must have a different directory.
+      state_dir: ""
+      # Optional fallback; credential proxy_url and host global proxy precede it.
+      proxy_url: ""
+      models:
+        - gpt-5.6-sol
+      concurrency: 4
+      queue: 64
+      wait_seconds: 30
+      upstream_rps: 0
+      ws_idle_seconds: 120
+      login_method: browser

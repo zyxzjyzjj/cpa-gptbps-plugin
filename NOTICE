@@ -1,0 +1,19 @@
+CPA Codex BPS plugin
+
+The BPS protocol, WebSocket transport, account admission and browser/device
+authorization core originate from GPT-BPS / bps-local at:
+https://github.com/sunboyzoey/GPT-BPS
+Baseline: 203c716ccd1cad0452b5dc7535c46e6531e73af0
+Protocol component attribution: hloolx.
+
+The baseline's complete license collection and its qualification about
+intermediate protocol licensing are preserved in LICENSE. The new CPA adapter
+code is released under the Unlicense, subject to the component-specific terms.
+
+CPA C ABI layouts and JSON wire contracts follow CLIProxyAPI:
+https://github.com/router-for-me/CLIProxyAPI
+Reference: 8522538 (v8; ABI 1, schema 10), 2026-11-23.
+Its MIT license is included in licenses/CLIProxyAPI-MIT.txt.
+
+Source provenance hashes and all deliberate deviations are documented in
+docs/upstream-manifest.json and docs/WORKLOG.md.
