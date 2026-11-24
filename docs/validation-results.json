@@ -271,7 +271,71 @@
     "Real OAuth login reused earlier independent BPS authorization; native callback, PKCE and refresh rotation tested with fixtures; valid RT not forcibly exchanged.",
     "Nonstream C ABI has no independent downstream cancellation notification.",
     "BPS hosted tools, inline images, previous_response_id and forced tool_choice are unsupported.",
-    "Linux/macOS real CPA-host loading has not been tested.",
-    "Store installation is pending release publication."
-  ]
+    "Linux/macOS real CPA-host loading has not been tested."
+  ],
+  "store_installation": {
+    "install_http_status": 200,
+    "source_id": "source-14c43337f16c",
+    "registered": true,
+    "effective_enabled": true,
+    "authenticated_import": true,
+    "unauthenticated_import_status": 401,
+    "native_login_entry": true,
+    "real_generation_completed": true,
+    "text": [
+      "STORE_OK"
+    ],
+    "wire_marker_absent": true,
+    "usage": {
+      "input_tokens": 22359,
+      "input_tokens_details": {
+        "cache_write_tokens": 22356,
+        "cache_write_tokens_details": {
+          "ttl_12h_tokens": 0,
+          "ttl_30m_tokens": 22356
+        },
+        "cached_tokens": 0
+      },
+      "output_tokens": 6,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 22365
+    },
+    "native_usage_records": 1,
+    "observed_generation_seconds": 3.24
+  },
+  "release_artifacts": {
+    "release": "v0.1.0",
+    "anonymous_registry_http_status": 200,
+    "anonymous_release_http_status": 200,
+    "platform_assets": [
+      "codex-bps_0.1.0_darwin_amd64.zip",
+      "codex-bps_0.1.0_darwin_arm64.zip",
+      "codex-bps_0.1.0_linux_amd64.zip",
+      "codex-bps_0.1.0_linux_arm64.zip",
+      "codex-bps_0.1.0_windows_amd64.zip"
+    ],
+    "sha256_manifest_entries": 5,
+    "windows_zip_sha256": "e74a846edbc89c66b23b74f122926c2a436d49c0920f6d8ebbef52e3a092a888",
+    "windows_dll_sha256": "770694fd0da3cb8b5f4bd936ef24d36a3f37a0b350943fb1e9fad8235a650bb3",
+    "windows_sha256_matches": true,
+    "zip_root_library": true,
+    "zip_root_login_helper": true,
+    "installed_dll_matches_release": true,
+    "login_helper_help_exit_code": 0
+  },
+  "ci": {
+    "run_id": 45353732846,
+    "source_commit": "89fb75ead1a62c88f99e0fece0ffc948e442d471",
+    "result": "success",
+    "platforms": [
+      "windows/amd64",
+      "linux/amd64",
+      "linux/arm64",
+      "darwin/amd64",
+      "darwin/arm64"
+    ]
+  },
+  "repository_visibility": "public; explicitly approved by the user"
 }

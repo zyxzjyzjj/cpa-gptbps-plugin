@@ -22,7 +22,9 @@ https://raw.githubusercontent.com/zyxzjyzjj/cpa-gptbps-plugin/main/registry.json
 
 然后安装 **Codex BPS**，开启全局插件开关。宿主必须是支持 CGO 插件的版本；管理接口的 `X-CPA-SUPPORT-PLUGIN: 1` 仅代表构建支持，还应确认 `/v0/management/plugins` 中该插件为 `registered: true`、`effective_enabled: true`。
 
-配置示例见 [config.example.yaml](config.example.yaml)。插件 ID、库文件名和配置键均为 `codex-bps`。发布包采用 CPA 要求的命名格式，库位于 ZIP 根目录，并提供 `checksums.txt`。
+仓库和商店源已公开；[v0.1.0 发布包](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/releases/tag/v0.1.0) 提供 Windows amd64、Linux amd64/arm64、macOS amd64/arm64 及 `checksums.txt`。已在全新 Windows CPA 实例通过匿名商店安装、凭据导入及真实生成验收。
+
+配置示例见 [config.example.yaml](config.example.yaml)。插件 ID、配置键和 ZIP 内的库名均为 `codex-bps`；宿主在 Windows 商店安装时可能使用带版本的 DLL 文件名。发布包采用 CPA 要求的命名格式，库位于 ZIP 根目录。
 
 当前验收宿主为 CPA v8 源码 `8522538`。插件仅使用 ABI 1 / schema 1 的能力字段；较旧宿主可加载并不保证拥有新版的用量报告、错误分类及流清理行为。
 
@@ -123,3 +125,5 @@ python tools/live_check.py --keys /private/keys.json --out /private/bps-results 
 原项目基线 `203c716ccd1cad0452b5dc7535c46e6531e73af0`，协议组件作者 hloolx。完整许可与原项目的组件许可说明保留在 [LICENSE](LICENSE)、[NOTICE](NOTICE) 和 `licenses/`。源码哈希及本地授权修补的来源见 [docs/upstream-manifest.json](docs/upstream-manifest.json)。
 
 这是第三方集成。BPS 内部接口、模型权限及授权政策可能变化。
+
+接口对照参考：[CPA 插件开发规范](https://help.router-for.me/plugin/development.html)、[CLIProxyAPI 原生 Codex 授权](https://github.com/router-for-me/CLIProxyAPI/blob/main/internal/auth/codex/openai_auth.go)、[CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus)。

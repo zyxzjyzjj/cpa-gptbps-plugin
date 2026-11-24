@@ -66,7 +66,19 @@
 
 ## 发布与商店验收
 
-源码、各平台构建及 GitHub release 的发布正在进行。商店安装的最终结果将在发布后回填本节；未将尚未执行的商店安装写成通过。
+- 公开仓库：`https://github.com/zyxzjyzjj/cpa-gptbps-plugin`。目标仓库原为私有，经用户明确选择“改为公开，允许直接导入”后修改可见性。
+- 源码标签 `v0.1.0`：`89fb75ead1a62c88f99e0fece0ffc948e442d471`。
+- GitHub Actions run `45353732846`：Windows amd64、Linux amd64/arm64、macOS amd64/arm64 五个原生构建/测试全部成功，publish 成功。
+- Release 提供 5 个平台 ZIP 和 `checksums.txt`，校验清单含 5 条 SHA-256。Windows ZIP SHA-256：`e74a846edbc89c66b23b74f122926c2a436d49c0920f6d8ebbef52e3a092a888`。
+- 用不带 GitHub Token 的全新 CPA 实例，从公开 registry 发现插件：`auth_required: false`、`installed: false`，随后调用宿主原生商店安装接口。
+- 首次安装返回 502；确认插件目录仍为空后重新安装，返回 200 / installed。没有替换成本地 DLL 来冒充商店安装。
+- 商店下载并校验发布资产后，真实注册 `registered: true`、`effective_enabled: true`，`restart_required: false`。
+- 单独匿名下载 Windows ZIP，再验 SHA-256、根目录 DLL/登录助手，并确认宿主安装 DLL 与发布 ZIP 内 DLL 的 SHA-256 一致。发布版 `bps-login.exe --help` 退出码 0。
+- 通过发布版受认证 import 路由将真实 BPS OAuth JSON 交给 `host.auth.save`，200 / ok；模型随后可见。未带管理密钥的同一路由返回 401。
+- CPA 原生 `codex-bps-auth-url` 返回 200，state 长度 43，BPS client/注册回调/S256 均正确；仅验证会话创建，随后取消，没有要求用户重复登录。
+- 发布版真实流式生成返回 `STORE_OK` / completed，约 3.240 秒；input 22,359、output 6、total 22,365，cache-write 22,356、cache-read 0。该实例使用全新 task state，未把它的冷缓存记作命中。
+- 发布版宿主 usage queue 正确产生 1 条成功记录，数字与上游一致，客户端未收到内部 wire marker。
+- 商店安装后的详细数值汇总见 `validation-results.json`；发布 ZIP 内记录为构建时快照，商店验收的后续结果以 main 分支及 release 附加验证报告为准。
 
 ## 已知限制
 
