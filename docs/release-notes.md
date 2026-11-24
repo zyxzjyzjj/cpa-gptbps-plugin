@@ -15,6 +15,8 @@ https://raw.githubusercontent.com/zyxzjyzjj/cpa-gptbps-plugin/main/registry.json
 
 Upgrade the plugin and restart CPA to load the live account catalog. Default `model_cache_seconds` is 300. An expired cache is revalidated when CPA next reloads that account's models; this is not an independent background refresh timer.
 
-The BPS account used for verification returned 9 models with HTTP 200. Focused plugin tests and race checks passed. Release-build and server verification results are recorded in [WORKLOG.md](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/blob/main/docs/WORKLOG.md).
+The Linux CPA v8.1.2 server was upgraded through the native plugin store. Its BPS account now lists all 9 models returned by upstream, with no stale catalog. All five release platforms and focused race checks passed. Existing accounts and their models were preserved.
+
+One `gpt-6.2-sol` request was isolated to the BPS account using a temporary prefix. Upstream returned HTTP 429 (`BPS upstream rate limited`), so successful generation or available quota for this model is not established. The prefix was removed, authorization files were restored byte for byte with the correct service ownership and permissions, and both services are active. Detailed results are recorded in [WORKLOG.md](https://github.com/zyxzjyzjj/cpa-gptbps-plugin/blob/main/docs/WORKLOG.md).
 
 The inference bridge, task pool, tools and native CPA usage reporting are unchanged. Existing BPS restrictions still apply; appearing in the model catalog does not prove generation entitlement, remaining quota or every tool capability.

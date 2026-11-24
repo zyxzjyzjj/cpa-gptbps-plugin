@@ -271,7 +271,7 @@
     "Real OAuth login reused earlier independent BPS authorization; native callback, PKCE and refresh rotation tested with fixtures; valid RT not forcibly exchanged.",
     "Nonstream C ABI has no independent downstream cancellation notification.",
     "BPS hosted tools, inline images, previous_response_id and forced tool_choice are unsupported.",
-    "Linux/macOS real CPA-host loading has not been tested."
+    "Baseline v0.1.0 generation/tools suite did not test Linux/macOS CPA hosts. v0.1.2 Linux catalog and routing results are recorded separately below."
   ],
   "store_installation": {
     "install_http_status": 200,
@@ -355,6 +355,67 @@
     "fixed_model_fallback": false,
     "native_http_wire_contract": "StatusCode / Headers / Body; exact literal response regression for catalog and OAuth transports",
     "focused_race_tests": "passed",
-    "server_release_verification": "pending"
+    "server_release_verification": "passed: native plugin store, fresh upstream catalog, account model registry, restart persistence and final account integrity; generation returned upstream 429",
+    "ci_run_id": 45369565520,
+    "ci_source_commit": "c28057ef7afa873c601e53bd7a8d1748e347a567",
+    "ci_result": "success; all five platform builds and publish passed",
+    "release": "v0.1.2",
+    "release_assets": [
+      "checksums.txt",
+      "codex-bps_0.1.2_darwin_amd64.zip",
+      "codex-bps_0.1.2_darwin_arm64.zip",
+      "codex-bps_0.1.2_linux_amd64.zip",
+      "codex-bps_0.1.2_linux_arm64.zip",
+      "codex-bps_0.1.2_windows_amd64.zip"
+    ],
+    "server_cpa_version": "v8.1.2",
+    "native_store_install": "HTTP 200; installed v0.1.2",
+    "registered": true,
+    "effective_enabled": true,
+    "upstream_model_count": 9,
+    "account_models": [
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+      "gpt-6-astra",
+      "gpt-6-luna",
+      "gpt-6-sol",
+      "gpt-6.1-sol",
+      "gpt-6.2-astra",
+      "gpt-6.2-sol"
+    ],
+    "catalog_stale": false,
+    "model_cache_seconds": 300,
+    "all_previous_global_models_preserved": true,
+    "global_model_count": 20,
+    "single_model_generation": {
+      "model": "gpt-6.2-sol",
+      "route_isolated_to_bps": true,
+      "http_status": 429,
+      "pass": false,
+      "error_code": "rate_limit_exceeded",
+      "error_message": "BPS upstream rate limited",
+      "note": "Confirms BPS route selection; does not establish successful generation or quota availability for this model.",
+      "native_failure_log_observed": true,
+      "tested_model_count": 1,
+      "retries": 0
+    },
+    "account_model_count_before": 1,
+    "account_model_count_after": 9,
+    "global_model_count_after": 20,
+    "upstream_default_model": "gpt-5.6-sol",
+    "temporary_prefix_removed": true,
+    "all_14_authorization_file_contents_unchanged_sha256": true,
+    "service_can_read_auth": true,
+    "auth_file_mode": "0600",
+    "auth_file_owner_matches_service": true,
+    "services": {
+      "cliproxyapi": "active",
+      "cpa-public": "active"
+    },
+    "refresh_behavior": "Success cache TTL 300 seconds; revalidated when CPA next loads that account models, including restart or account reload. No independent background refresh timer.",
+    "production_usage_queue_consumed": false,
+    "local_deployment_services_started": false,
+    "permission_restore_incident": "Replacing the temporary test auth file as root initially changed ownership; restored service ownership and 0600, verified service readability and reloaded all 14 accounts. No token contents changed."
   }
 }

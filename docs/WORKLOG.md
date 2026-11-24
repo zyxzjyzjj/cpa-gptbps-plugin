@@ -15,7 +15,12 @@
 - 修复宿主 HTTP transport 读取无请求体 GET 时的 nil body 问题。推理执行、工具、task 调度与 usage 逻辑未改。
 - 新增目录来源、旧配置迁移、权限过滤、去重、AT 轮换缓存隔离、过期刷新、并发合并、短期失败、拒绝清理、异常结构及关闭取消测试；`go test -race . -count=1` 通过。
 - v0.1.1 五平台 CI 全部成功，但真实 CPA v8.1.2 加载后暴露非流式 HTTP 回调字段错误：宿主返回 `StatusCode`，本地 fixture 错用了流式接口的 `status_code`。服务器已恢复旧插件；没有将本地测试通过写成线上成功。
-- v0.1.2 统一使用与原生 `pluginapi.HTTPResponse` 一致的字段，补入字面量宿主响应回归；同时修复直接受影响的 OAuth transport。新版发布和服务器复验进行中。
+- v0.1.2 统一使用与原生 `pluginapi.HTTPResponse` 一致的字段，补入字面量宿主响应回归；同时修复直接受影响的 OAuth transport。相关 race 测试通过，发布 CI `45369565520` 的五个平台构建、原有测试及 publish 全部成功，源码提交 `c28057e`。
+- Linux 服务器 CPA v8.1.2 经原生商店安装 v0.1.2，插件 `registered`、`effective_enabled` 均为 true。该 BPS 账号的模型接口返回 9 个真实上游模型：`gpt-5.6-{luna,terra,sol}`、`gpt-6-{astra,luna,sol}`、`gpt-6.1-sol`、`gpt-6.2-{astra,sol}`。上游仍将 `gpt-5.6-sol` 标为默认模型，这不限制目录中的其他模型。
+- 目录状态为 `stale: false`，缓存 300 秒；全局仍有 20 个模型，升级前其他账号提供的模型全部保留。全局模型数没有增加，是因为已有原生账号提供同名模型；本次以 BPS 账号自己的 1 → 9 目录变化验收。
+- 为避免将其他原生账号的响应误当成 BPS，临时给该账号加前缀，只发起一次 `gpt-6.2-sol` 请求。实际返回 HTTP 429、`rate_limit_exceeded`、`BPS upstream rate limited`；原生 CPA 日志确认 provider 为 `codex-bps`。这证明了路由到 BPS，不能作为该模型生成成功、配额可用或 9 个模型全部可用的证据；没有重试，也没有重跑旧版 tools/cache 测试。
+- 临时前缀已移除；恢复文件时一度因临时文件归属 root 导致服务读取失败，已恢复为 CPA 服务账号所有权和 0600 权限，确认服务账号可读。再次重启后 BPS 目录仍为 9 个，14 份授权文件内容与升级前逐份 SHA-256 相同，CPA 与公共入口均 active。
+- 升级前配置和插件回滚包保存在服务器私有目录 `/root/deploy-cpa-bps-catalog-20261124/before-plugin-0.1.1.tar.gz`。生产 usage queue 没有被消费，本地部署服务没有恢复。
 
 ## 来源与边界
 
