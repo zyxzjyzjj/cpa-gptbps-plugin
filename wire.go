@@ -11,6 +11,15 @@ import (
 // Wire fields mirror CPA sdk/pluginapi and internal/pluginhost/rpc_schema.go.
 // Byte fields are base64 in JSON. No Go host dependency crosses the C ABI.
 type hostCall func(string, any, any) error
+
+// host.http.do marshals sdk/pluginapi.HTTPResponse without JSON field tags.
+// The snake_case status_code field belongs to the separate streaming callback.
+type hostHTTPResponse struct {
+	StatusCode int
+	Headers    http.Header
+	Body       []byte
+}
+
 type envelope struct {
 	OK     bool            `json:"ok"`
 	Result json.RawMessage `json:"result,omitempty"`

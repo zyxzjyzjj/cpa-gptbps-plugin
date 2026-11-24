@@ -12,7 +12,7 @@ import zipfile
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default="0.1.1")
+    parser.add_argument("--version", default="0.1.2")
     args = parser.parse_args()
     version = args.version.removeprefix("v")
     if not version or any(c not in "0123456789.-abcdefghijklmnopqrstuvwxyz" for c in version):

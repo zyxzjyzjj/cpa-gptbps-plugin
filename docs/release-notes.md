@@ -1,5 +1,6 @@
 Fix the provider exposing only the single model configured by v0.1.0.
 
+- Correct the native CPA nonstream HTTP callback contract (`StatusCode`, `Headers`, `Body`). v0.1.1 incorrectly expected the streaming callback's `status_code`; v0.1.2 fixes catalog discovery and the directly affected OAuth transport.
 - Discover each credential's models from the authenticated BPS access endpoint (`include_models=true`), reading `model_catalog.models`.
 - Preserve upstream IDs, labels, descriptions and bridge-supported reasoning levels; filter restricted models.
 - Remove fixed/default model registration. Legacy `models` lists no longer limit or supplement the catalog.

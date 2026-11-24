@@ -346,6 +346,15 @@
     "upstream_model_count": 9,
     "fixed_model_fallback": false,
     "unit_race_tests": "passed",
+    "server_release_verification": "failed: native nonstream HTTP callback uses StatusCode, but v0.1.1 incorrectly decoded status_code; rolled back server to v0.1.0",
+    "ci_run_id": 45367054570,
+    "ci_result": "success; all five platform builds and publish passed"
+  },
+  "model_discovery_v0_1_2": {
+    "source": "https://bps.openai.com/basispoints/api/responses/access?include_models=true",
+    "fixed_model_fallback": false,
+    "native_http_wire_contract": "StatusCode / Headers / Body; exact literal response regression for catalog and OAuth transports",
+    "focused_race_tests": "passed",
     "server_release_verification": "pending"
   }
 }

@@ -2,7 +2,7 @@
 
 日期：2026-11-24（Asia/Shanghai）。本文件持续更新同一交付单元的结论。
 
-## v0.1.1：按账号读取上游模型目录
+## v0.1.1 / v0.1.2：按账号读取上游模型目录
 
 用户指出默认仅展示 5.6 不符合实际使用要求。本版移除固定模型注册：从认证的 `/basispoints/api/responses/access?include_models=true` 读取 `model_catalog.models`，不再用旧 `models` 数组限制或补充目录。
 
@@ -14,7 +14,8 @@
 - 普通 HTTP 优先使用带 callback/operation 作用域的宿主接口；显式凭据代理或插件后备代理使用匹配的 transport，关闭时取消正在进行的目录请求。
 - 修复宿主 HTTP transport 读取无请求体 GET 时的 nil body 问题。推理执行、工具、task 调度与 usage 逻辑未改。
 - 新增目录来源、旧配置迁移、权限过滤、去重、AT 轮换缓存隔离、过期刷新、并发合并、短期失败、拒绝清理、异常结构及关闭取消测试；`go test -race . -count=1` 通过。
-- 新版本发布和服务器安装验证进行中，完成后在本节补充真实结果。
+- v0.1.1 五平台 CI 全部成功，但真实 CPA v8.1.2 加载后暴露非流式 HTTP 回调字段错误：宿主返回 `StatusCode`，本地 fixture 错用了流式接口的 `status_code`。服务器已恢复旧插件；没有将本地测试通过写成线上成功。
+- v0.1.2 统一使用与原生 `pluginapi.HTTPResponse` 一致的字段，补入字面量宿主响应回归；同时修复直接受影响的 OAuth transport。新版发布和服务器复验进行中。
 
 ## 来源与边界
 

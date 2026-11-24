@@ -176,11 +176,7 @@ func (t catalogHostTransport) RoundTrip(req *http.Request) (*http.Response, erro
 			<-cancelDone
 		}()
 	}
-	var result struct {
-		StatusCode int         `json:"status_code"`
-		Headers    http.Header `json:"headers"`
-		Body       []byte      `json:"body"`
-	}
+	var result hostHTTPResponse
 	if err := t.call("host.http.do", request, &result); err != nil {
 		return nil, errors.New("BPS model HTTP callback failed")
 	}

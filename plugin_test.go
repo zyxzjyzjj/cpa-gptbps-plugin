@@ -222,7 +222,7 @@ func TestRefreshReceiptAndAmbiguousGrantAreNotReplayed(t *testing.T) {
 				}
 				reply := map[string]any{"access_token": c.AccessToken, "refresh_token": "rotated-fixture", "expires_in": 3600, "token_type": "Bearer"}
 				body, _ := json.Marshal(reply)
-				raw, _ := json.Marshal(map[string]any{"status_code": 200, "body": body})
+				raw, _ := json.Marshal(map[string]any{"StatusCode": 200, "Body": body})
 				return json.Unmarshal(raw, result)
 			}
 			request := marshalTest(t, authMaterial{AuthID: "fixture.json", AuthProvider: provider, StorageJSON: marshalTest(t, c)})
@@ -301,7 +301,7 @@ func TestNativeCPACallbackFileCompletesBPSLogin(t *testing.T) {
 			t.Fatal("native callback lost BPS PKCE contract")
 		}
 		body, _ := json.Marshal(map[string]any{"access_token": c.AccessToken, "refresh_token": "fixture-refresh", "token_type": "Bearer", "expires_in": 3600})
-		raw, _ := json.Marshal(map[string]any{"status_code": 200, "body": body})
+		raw, _ := json.Marshal(map[string]any{"StatusCode": 200, "Body": body})
 		return json.Unmarshal(raw, result)
 	})
 	defer p.close()

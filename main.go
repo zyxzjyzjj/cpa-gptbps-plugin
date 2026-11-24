@@ -49,7 +49,7 @@ import (
 const provider = "codex-bps"
 const repository = "https://github.com/zyxzjyzjj/cpa-gptbps-plugin"
 
-var version = "0.1.1"
+var version = "0.1.2"
 var runtimePlugin = newPlugin(callHost)
 
 func main() {}

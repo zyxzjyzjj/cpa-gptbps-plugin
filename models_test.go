@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -43,7 +44,7 @@ func catalogFixtureHost(t *testing.T, do func(map[string]any) (int, []byte)) hos
 			if status >= 300 && status < 400 {
 				responseHeaders.Set("Location", "https://untrusted.invalid/catalog")
 			}
-			reply, _ := json.Marshal(map[string]any{"status_code": status, "headers": responseHeaders, "body": body})
+			reply, _ := json.Marshal(map[string]any{"StatusCode": status, "Headers": responseHeaders, "Body": body})
 			return json.Unmarshal(reply, result)
 		default:
 			return fmt.Errorf("unexpected fixture callback")
@@ -270,7 +271,7 @@ func TestHostOAuthTransportAcceptsBodylessRequests(t *testing.T) {
 		if method != "host.http.do" {
 			t.Fatal("unexpected HTTP callback")
 		}
-		raw, _ := json.Marshal(map[string]any{"status_code": 200, "body": []byte(`{}`)})
+		raw, _ := json.Marshal(map[string]any{"StatusCode": 200, "Body": []byte(`{}`)})
 		return json.Unmarshal(raw, result)
 	}}}
 	response, err := client.Get(bpsCatalogURL)
@@ -293,5 +294,43 @@ func TestCatalogDoesNotSendCredentialsToUnexpectedRedirect(t *testing.T) {
 	_, err := p.models(catalogRequest(t, testCredential(t), "first"))
 	if err == nil || !bytes.Contains(failure(err), []byte("model_catalog_http_error")) || calls.Load() != 1 {
 		t.Fatal("accepted unexpected redirect")
+	}
+}
+
+func TestHostHTTPTransportsDecodeCPANativeResponse(t *testing.T) {
+	// Literal wire fixture from CPA's untagged pluginapi.HTTPResponse. Using
+	// streaming callback field names here previously hid a real host failure.
+	const wire = `{"StatusCode":403,"Headers":{"Content-Type":["application/json"],"X-Catalog-Fixture":["native"]},"Body":"e30="}`
+	call := func(method string, request any, result any) error {
+		switch method {
+		case "host.http.operation_open":
+			return json.Unmarshal([]byte(`{"operation_id":"native-response-fixture"}`), result)
+		case "host.http.cancel":
+			return nil
+		case "host.http.do":
+			return json.Unmarshal([]byte(wire), result)
+		default:
+			return fmt.Errorf("unexpected callback %s", method)
+		}
+	}
+	for name, transport := range map[string]http.RoundTripper{
+		"catalog": catalogHostTransport{call: call},
+		"oauth":   hostOAuthTransport{call: call},
+	} {
+		t.Run(name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, bpsCatalogURL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response, err := transport.RoundTrip(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer response.Body.Close()
+			body, err := io.ReadAll(response.Body)
+			if err != nil || response.StatusCode != 403 || response.Header.Get("X-Catalog-Fixture") != "native" || string(body) != "{}" {
+				t.Fatal("native CPA HTTP status, headers or base64 body was lost")
+			}
+		})
 	}
 }

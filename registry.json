@@ -6,7 +6,7 @@
       "name": "Codex BPS",
       "description": "BPS provider with authenticated upstream model discovery, original GPT-BPS tools and task scheduling, PKCE authorization and native CPA per-request usage.",
       "author": "zyxzjyzjj",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "repository": "https://github.com/zyxzjyzjj/cpa-gptbps-plugin",
       "homepage": "https://github.com/zyxzjyzjj/cpa-gptbps-plugin#readme",
       "license": "Unlicense",
