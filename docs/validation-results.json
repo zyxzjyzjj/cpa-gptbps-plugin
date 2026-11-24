@@ -417,5 +417,73 @@
     "production_usage_queue_consumed": false,
     "local_deployment_services_started": false,
     "permission_restore_incident": "Replacing the temporary test auth file as root initially changed ownership; restored service ownership and 0600, verified service readability and reloaded all 14 accounts. No token contents changed."
+  },
+  "empty_response_v0_1_3": {
+    "date": "2026-11-24",
+    "timezone": "Asia/Shanghai",
+    "source_comparison": {
+      "source_worktree": "C:\\zjj\\bps-local-public",
+      "source_commit": "203c716ccd1cad0452b5dc7535c46e6531e73af0",
+      "core_go_files": 87,
+      "normalized_identical_files": 85,
+      "missing_files": [],
+      "extra_core_files": [],
+      "different_files": {
+        "internal/gateway/standalone.go": "CPA request-selected credential and proxy entry adapter",
+        "internal/auth/device_test.go": "Windows ACL-aware permission assertion"
+      },
+      "existing_dependency_versions": "identical; plugin adds yaml.v3",
+      "source_workspace_modified_by_this_fix": false
+    },
+    "server_baseline": {
+      "plugin_version": "0.1.2",
+      "model": "gpt-5.6-sol",
+      "enabled_bps_accounts": 1,
+      "consecutive_nonstream_requests": 3,
+      "consecutive_stream_requests": 3,
+      "pause_seconds": 45,
+      "post_pause_requests": 2,
+      "total_requests": 8,
+      "visible_text_responses": 7,
+      "empty_content_cases": 1,
+      "failing_case": "burst_stream_3",
+      "failing_http_status": 200,
+      "failing_event_types": [
+        "response.created",
+        "response.in_progress",
+        "error"
+      ],
+      "upstream_error_code": "server_is_overloaded",
+      "upstream_error_type": "service_unavailable_error",
+      "upstream_retry_after_seconds": 7,
+      "upstream_retry_after_ms": 7000,
+      "both_post_pause_requests_succeeded": true
+    },
+    "fixes": [
+      "Defer publishing lifecycle events until actual output, validated client tools or a valid terminal response",
+      "Classify overload as HTTP 503; preserve bounded retry metadata and existing rate/auth/model/quota categories",
+      "Retain partial-output failure events and never synthesize successful completion or replay generation",
+      "Wait for original WebSocket terminal cleanup and slot release; abort cancellations immediately",
+      "Return failed startup before joining blocked liveness callbacks so native bounded queues can abort; hold run lease until callbacks drain"
+    ],
+    "focused_race_tests": {
+      "result": "passed",
+      "command": "go test -race . -run 'Test(StreamStartup|SlowStartup|LateStream|EventFailure|ExecutorTerminal|ExecutorUses|Downstream|TerminalAccounting|WireNormalizer)' -count=1",
+      "old_adapter_delayed_close_failures": 8,
+      "terminal_modes_covered": [
+        "completed",
+        "incomplete",
+        "failed",
+        "error"
+      ],
+      "tool_only_responses": [
+        "function",
+        "custom"
+      ],
+      "startup_backpressure": "native bounded stream queue contract covered with a one-entry fixture"
+    },
+    "server_upgrade_verification": "pending",
+    "ci": "pending",
+    "production_usage_queue_consumed": false
   }
 }

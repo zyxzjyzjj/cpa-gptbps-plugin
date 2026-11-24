@@ -69,7 +69,11 @@ v0.1.1 不再设置固定默认模型列表，旧的 `models` 配置也不再限
 
 认证/权限失败会清空对应缓存。短暂网络、429 或上游 5xx 失败仅可复用距最后成功读取不足 15 分钟的上游目录，并在插件 status 中标记 `stale` 和错误码；没有有效目录时明确报错，不补上固定模型。空目录保持为空。模型出现在上游目录中也不等于真实生成一定成功，仍受账号额度和服务状态影响。
 
-升级 v0.1.2 后重启 CPA，即会按当前账号拉取目录，无需手填模型。v0.1.1 的非流式宿主 HTTP 回调字段兼容问题已在 v0.1.2 修复。若与其他 provider 重名，可在凭据上设置 CPA `prefix`，明确选中 BPS。
+升级 v0.1.3 后重启 CPA，即会按当前账号拉取目录，无需手填模型。v0.1.1 的非流式宿主 HTTP 回调字段兼容问题已在 v0.1.2 修复。若与其他 provider 重名，可在凭据上设置 CPA `prefix`，明确选中 BPS。
+
+连续请求时，上游可能在 `response.created` / `response.in_progress` 后直接返回 `server_is_overloaded`，尚未输出正文。v0.1.3 在首个正文、推理文本、工具事件或有效终态前暂存初始化事件，使这类过载能够返回 HTTP 503，并保留上游 `Retry-After`；限流、权限及模型错误同样保留对应状态。已有内容之后发生的错误仍作为流内失败传递，并记录为失败，不改写成完成，也不由插件重发生成。
+
+连接结束会等待原桥接完成 WebSocket 正常关闭及任务槽位释放，取消和断流仍立即中止。核心协议、任务池、工具转换及 usage 数据沿用当前 `bps-local-public`；启动缓冲及错误状态转换属于 CPA 适配层。
 
 ```bash
 curl http://127.0.0.1:8317/v1/responses \
@@ -118,7 +122,7 @@ CPA 可选的请求日志记录客户端请求/返回内容，可能包含敏感
 ```bash
 go test ./...
 CGO_ENABLED=1 go build -trimpath -buildmode=c-shared -o codex-bps.so .
-python tools/package.py --version 0.1.2
+python tools/package.py --version 0.1.3
 ```
 
 Windows 输出 `.dll`，macOS 输出 `.dylib`。发布工作流在各平台原生编译、测试并生成安装包。真实上游验收、请求用量与已知限制记录在 [docs/WORKLOG.md](docs/WORKLOG.md)；单元测试不替代真实账号权限验证。

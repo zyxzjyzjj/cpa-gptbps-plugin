@@ -7,13 +7,11 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 func randomID() string {
@@ -103,61 +101,35 @@ func (p *plugin) execute(raw []byte, stream bool) (any, error) {
 		handler.ServeWithCredentials(rw, request, c, p.effectiveProxy(c.ProxyURL))
 		rw.WriteHeader(200)
 	}()
-	cleanup := func() { cancel(); _ = reader.Close(); <-done }
+	cleanup := func(terminalReceived bool) {
+		// The original bridge owns the normal WebSocket close handshake and
+		// releases the task slot afterward. Cancelling first aborts that cleanup.
+		if !terminalReceived {
+			cancel()
+			_ = reader.Close()
+		}
+		<-done
+		cancel()
+		_ = reader.Close()
+	}
 	select {
 	case <-rw.ready:
 	case <-ctx.Done():
-		cleanup()
+		cleanup(false)
 		return nil, &rpcError{Code: "connection_lifecycle", Message: "BPS request cancelled", HTTPStatus: 499}
 	}
 	headers := publicHeaders(rw.headers)
 	if rw.status >= 400 {
 		errorBody, _ := io.ReadAll(io.LimitReader(reader, 1<<20))
-		cleanup()
+		cleanup(false)
 		return nil, bridgeFailure(rw.status, errorBody, rw.headers)
 	}
 	if stream {
 		async = true
-		monitorDone := make(chan struct{})
-		go func() {
-			defer func() { cleanup(); <-monitorDone; p.runs.Done() }()
-			err := consumeResponses(reader, func(frame, response []byte, kind string) error {
-				return p.host("host.stream.emit", map[string]any{"stream_id": req.StreamID, "payload": tagWireFrame(frame)}, nil)
-			})
-			closeReq := map[string]any{"stream_id": req.StreamID}
-			if err != nil {
-				var detail *rpcError
-				if !errors.As(err, &detail) {
-					detail = &rpcError{Code: "stream_truncated", Message: "BPS stream ended before completion", HTTPStatus: 502}
-				}
-				closeReq["error_detail"] = detail
-			}
-			_ = p.host("host.stream.close", closeReq, nil)
-		}()
-		// Empty chunks are ignored by CPA. They let a silent BPS stream observe
-		// downstream cancellation even while no upstream token is arriving.
-		go func() {
-			defer close(monitorDone)
-			timer := time.NewTicker(time.Second)
-			defer timer.Stop()
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-done:
-					return
-				case <-timer.C:
-					if p.host("host.stream.emit", map[string]any{"stream_id": req.StreamID}, nil) != nil {
-						cancel()
-						return
-					}
-				}
-			}
-		}()
-		headers.Set("Content-Type", "text/event-stream")
-		return streamResponse{Headers: headers}, nil
+		return p.executeStream(ctx, cancel, reader, done, cleanup, req.StreamID, headers)
 	}
-	defer cleanup()
+	terminalReceived := false
+	defer func() { cleanup(terminalReceived) }()
 	var response []byte
 	var terminalKind string
 	err = consumeResponses(reader, func(frame, terminal []byte, kind string) error {
@@ -165,6 +137,7 @@ func (p *plugin) execute(raw []byte, stream bool) (any, error) {
 			response = append(response[:0], terminal...)
 			terminalKind = kind
 		}
+		terminalReceived = isTerminalResponse(kind)
 		return nil
 	})
 	if err != nil {
@@ -257,38 +230,6 @@ func consumeResponses(reader io.Reader, consume func([]byte, []byte, string) err
 	}
 	return terminalErr
 }
-func eventFailure(raw []byte) *rpcError {
-	var event struct {
-		Error struct {
-			Code string `json:"code"`
-			Type string `json:"type"`
-		} `json:"error"`
-		Response struct {
-			Error struct {
-				Code string `json:"code"`
-				Type string `json:"type"`
-			} `json:"error"`
-		} `json:"response"`
-	}
-	_ = json.Unmarshal(raw, &event)
-	code := event.Response.Error.Code
-	if code == "" {
-		code = event.Error.Code
-	}
-	switch code {
-	case "usage_limit_reached", "insufficient_quota", "quota_exceeded":
-		return &rpcError{Code: "credential_quota", Message: "BPS account quota exhausted", HTTPStatus: 429, CredentialScoped: true}
-	case "rate_limit_exceeded", "rate_limit_error":
-		return &rpcError{Code: "transient_rate_limit", Message: "BPS upstream rate limited", HTTPStatus: 429, RetryAfterSeconds: 1}
-	case "invalid_api_key", "token_expired", "invalid_token", "authentication_error":
-		return &rpcError{Code: "credential_invalid", Message: "BPS credential rejected", HTTPStatus: 401}
-	case "model_not_found", "model_not_available":
-		return &rpcError{Code: "model_not_found", Message: "Model is unavailable on this BPS credential", HTTPStatus: 404}
-	case "invalid_request_error", "basispoints_protocol_error":
-		return &rpcError{Code: "request_scoped", Message: "BPS rejected the request or returned an invalid tool envelope", HTTPStatus: 422}
-	}
-	return &rpcError{Code: "stream_truncated", Message: "BPS returned a failed response", HTTPStatus: 502}
-}
 func bridgeFailure(status int, body []byte, headers http.Header) *rpcError {
 	var result struct {
 		Error struct {
@@ -324,6 +265,9 @@ func bridgeFailure(status int, body []byte, headers http.Header) *rpcError {
 	case status == 502:
 		detail.Code = "transient_transport"
 		detail.Message = "BPS WebSocket connection failed"
+	case status == 503:
+		detail.Code = "transient_overload"
+		detail.Message = "BPS upstream is overloaded; retry after the indicated delay"
 	}
 	if n, err := strconv.Atoi(headers.Get("Retry-After")); err == nil && n > 0 {
 		detail.RetryAfterSeconds = n
